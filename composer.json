@@ -1,9 +1,9 @@
 {
-    "name": "symfony/aha-send-mailer",
+    "name": "ahasend/symfony-mailer",
     "type": "symfony-mailer-bridge",
-    "description": "Symfony AhaSend Mailer Bridge",
-    "keywords": [],
-    "homepage": "https://symfony.com",
+    "description": "AhaSend Mailer Bridge: the Symfony 8.2 bridge, with API v2 and webhooks, for Symfony 7.4, 8.0 and 8.1",
+    "keywords": ["ahasend", "mailer", "symfony"],
+    "homepage": "https://ahasend.com",
     "license": "MIT",
     "authors": [
         {
@@ -16,21 +16,37 @@
         }
     ],
     "require": {
-        "php": ">=8.4.1",
+        "php": ">=8.2",
         "psr/event-dispatcher": "^1",
         "symfony/deprecation-contracts": "^2.5|^3",
-        "symfony/mailer": "^8.2"
+        "symfony/http-client": "^7.4|^8.0",
+        "symfony/mailer": "^7.4|^8.0"
     },
     "require-dev": {
+        "phpunit/phpunit": "^11.5.50",
         "symfony/clock": "^7.4|^8.0",
-        "symfony/http-client": "^7.4|^8.0",
+        "symfony/framework-bundle": "^7.4|^8.0",
+        "symfony/messenger": "^7.4|^8.0",
+        "symfony/phpunit-bridge": "^7.4|^8.0",
+        "symfony/remote-event": "^7.4|^8.0",
         "symfony/webhook": "^7.4|^8.0"
+    },
+    "replace": {
+        "symfony/aha-send-mailer": "^7.4|^8.0"
+    },
+    "suggest": {
+        "symfony/webhook": "Receives AhaSend webhooks as remote events"
     },
     "autoload": {
         "psr-4": { "Symfony\\Component\\Mailer\\Bridge\\AhaSend\\": "" },
+        "files": [ "Resources/polyfill.php" ],
         "exclude-from-classmap": [
-            "/Tests/"
+            "/Tests/",
+            "/Resources/polyfill/"
         ]
     },
-    "minimum-stability": "dev"
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable"
 }
