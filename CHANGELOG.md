@@ -8,6 +8,7 @@ ahasend/symfony-mailer 1.0
  * Include `TrackingHeader`, new in Symfony 8.2, for those versions
  * API v2: send inline Content-IDs in angle brackets, as the API requires
  * API v2: do not send Bcc addresses as a header
+ * API v2: move AhaSend's SMTP special headers to the API's fields
 
 8.2
 ---

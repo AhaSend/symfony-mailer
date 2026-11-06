@@ -17,6 +17,7 @@ use Symfony\Component\Mailer\Bridge\AhaSend\Event\AhaSendDeliveryEvent;
 use Symfony\Component\Mailer\Envelope;
 use Symfony\Component\Mailer\Exception\HttpTransportException;
 use Symfony\Component\Mailer\Exception\IncompleteDsnException;
+use Symfony\Component\Mailer\Exception\InvalidArgumentException;
 use Symfony\Component\Mailer\Header\TagHeader;
 use Symfony\Component\Mailer\Header\TrackingHeader;
 use Symfony\Component\Mailer\SentMessage;
@@ -168,6 +169,7 @@ final class AhaSendApiTransport extends AbstractApiTransport
         [$headers, $tags] = $this->prepareHeaders($email->getHeaders());
         // Bcc addresses are already in "recipients"; as a header they could be shown to everyone
         unset($headers['Bcc']);
+        [$headers, $tags, $options] = $this->extractOptionHeaders($headers, $tags);
         $tracking = TrackingHeader::fromHeaders($email->getHeaders());
         if ($headers) {
             $payload['headers'] = $headers;
@@ -181,6 +183,8 @@ final class AhaSendApiTransport extends AbstractApiTransport
         if (null !== $tracking?->getClicks()) {
             $payload['tracking']['click'] = $tracking->getClicks();
         }
+        // an explicit AhaSend-* header wins over the generic TrackingHeader, as on SMTP
+        $payload = array_replace_recursive($payload, $options);
 
         if ($email->getAttachments()) {
             // v2 needs the MIME form of the Content-ID, in angle brackets: without
@@ -193,6 +197,52 @@ final class AhaSendApiTransport extends AbstractApiTransport
         }
 
         return $payload;
+    }
+
+    /**
+     * Moves AhaSend's SMTP special headers to the API v2 fields they correspond
+     * to, so they keep their meaning on this transport. A malformed value throws:
+     * a typo in AhaSend-Sandbox must not turn a test into a real send. Any other
+     * header is left to be forwarded.
+     *
+     * @param array<string, string> $headers
+     * @param list<string>          $tags
+     *
+     * @return array{0: array<string, string>, 1: list<string>, 2: array<string, mixed>}
+     */
+    private function extractOptionHeaders(array $headers, array $tags): array
+    {
+        $options = [];
+        foreach ($headers as $name => $value) {
+            $value = trim($value);
+
+            match ('' === $value ? null : strtolower($name)) {
+                'ahasend-tags' => $tags = array_merge($tags, array_values(array_filter(array_map('trim', explode(',', $value)), 'strlen'))),
+                'ahasend-track-opens' => $options['tracking']['open'] = $this->parseBooleanHeader($name, $value),
+                'ahasend-track-clicks' => $options['tracking']['click'] = $this->parseBooleanHeader($name, $value),
+                'ahasend-sandbox' => $options['sandbox'] = $this->parseBooleanHeader($name, $value),
+                'ahasend-sandbox-result' => $options['sandbox_result'] = $value,
+                'ahasend-metadata-retention' => $options['retention']['metadata'] = $this->parseDaysHeader($name, $value),
+                'ahasend-data-retention' => $options['retention']['data'] = $this->parseDaysHeader($name, $value),
+                default => $name = null,
+            };
+
+            if (null !== $name) {
+                unset($headers[$name]);
+            }
+        }
+
+        return [$headers, array_values(array_unique($tags)), $options];
+    }
+
+    private function parseBooleanHeader(string $name, string $value): bool
+    {
+        return filter_var($value, \FILTER_VALIDATE_BOOL, \FILTER_NULL_ON_FAILURE) ?? throw new InvalidArgumentException(\sprintf('The "%s" header must be "true" or "false", got "%s".', $name, $value));
+    }
+
+    private function parseDaysHeader(string $name, string $value): int
+    {
+        return ctype_digit($value) ? (int) $value : throw new InvalidArgumentException(\sprintf('The "%s" header must be a whole number of days, got "%s".', $name, $value));
     }
 
     private function getLegacyPayload(Email $email, Envelope $envelope): array

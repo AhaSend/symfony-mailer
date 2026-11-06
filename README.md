@@ -65,6 +65,11 @@ Symfony version. See the changes with `git diff 8.2...main`:
    [API reference](https://ahasend.com/docs/api-reference) requires. Without them
    AhaSend delivers the image as a regular attachment.
  - API v2: Bcc addresses are not sent as a `Bcc` header. They are still recipients.
+ - API v2: AhaSend's [SMTP special headers](https://ahasend.com/docs/smtp/special-headers)
+   (`AhaSend-Tags`, `AhaSend-Track-Opens`, `AhaSend-Track-Clicks`, `AhaSend-Sandbox`,
+   `AhaSend-Sandbox-Result`, `AhaSend-Metadata-Retention`, `AhaSend-Data-Retention`)
+   are moved to the API's fields, so code written for SMTP keeps its meaning. A
+   malformed value throws before anything is sent.
 
 Upgrading to Symfony 8.2
 ------------------------
