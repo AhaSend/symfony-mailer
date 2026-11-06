@@ -166,6 +166,8 @@ final class AhaSendApiTransport extends AbstractApiTransport
         }
 
         [$headers, $tags] = $this->prepareHeaders($email->getHeaders());
+        // Bcc addresses are already in "recipients"; as a header they could be shown to everyone
+        unset($headers['Bcc']);
         $tracking = TrackingHeader::fromHeaders($email->getHeaders());
         if ($headers) {
             $payload['headers'] = $headers;

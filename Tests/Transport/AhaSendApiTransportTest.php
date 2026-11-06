@@ -145,7 +145,7 @@ class AhaSendApiTransportTest extends TestCase
             $this->assertSame('<html lang="en"><body><p>Test email body</p></body></html>', $body['html_content']);
             $this->assertSame('bar2@example.com', $body['reply_to']['email']);
             $this->assertSame('Mr. Recipient', $body['reply_to']['name']);
-            $this->assertSame('baz@example.com', $body['headers']['Bcc']);
+            $this->assertArrayNotHasKey('headers', $body, 'Bcc addresses must not be sent as a header');
 
             return new JsonMockResponse([
                 'object' => 'list',
