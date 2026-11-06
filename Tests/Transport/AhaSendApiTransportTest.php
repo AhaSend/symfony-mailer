@@ -504,9 +504,23 @@ class AhaSendApiTransportTest extends TestCase
         $payload = $method->invoke($transport, $email, $envelope);
 
         $this->assertCount(2, $payload['attachments']);
-        $this->assertSame('content-identifier@symfony', $payload['attachments'][0]['content_id']);
+        $this->assertSame('<content-identifier@symfony>', $payload['attachments'][0]['content_id']);
+        $this->assertArrayNotHasKey('content_id', $payload['attachments'][1]);
         $this->assertTrue($payload['attachments'][1]['base64']);
         $this->assertSame(base64_encode('image-contents'), $payload['attachments'][1]['data']);
+    }
+
+    public function testEmbeddedImageMatchesTheCidInTheHtmlV2()
+    {
+        $email = (new Email())->html('<img src="cid:logo">')->embed('image-contents', 'logo', 'image/png');
+        $envelope = new Envelope(new Address('alice@system.com'), [new Address('bob@system.com')]);
+
+        $transport = new AhaSendApiTransport('aha-sk-ACCESS_KEY', accountId: 'ACCOUNT_ID');
+        $method = new \ReflectionMethod(AhaSendApiTransport::class, 'getPayload');
+        $payload = $method->invoke($transport, $email, $envelope);
+
+        $this->assertSame('<logo>', $payload['attachments'][0]['content_id']);
+        $this->assertSame('<img src="cid:logo">', $payload['html_content']);
     }
 
     public function testTrackingHeaderV2()

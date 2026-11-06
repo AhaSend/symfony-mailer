@@ -181,7 +181,13 @@ final class AhaSendApiTransport extends AbstractApiTransport
         }
 
         if ($email->getAttachments()) {
-            $payload['attachments'] = $this->getAttachments($email);
+            // v2 needs the MIME form of the Content-ID, in angle brackets: without
+            // them it delivers an inline image as a regular attachment. The HTML
+            // keeps referencing it without brackets, as cid:<id>.
+            $payload['attachments'] = array_map(
+                static fn (array $attachment): array => isset($attachment['content_id']) ? ['content_id' => '<'.$attachment['content_id'].'>'] + $attachment : $attachment,
+                $this->getAttachments($email),
+            );
         }
 
         return $payload;

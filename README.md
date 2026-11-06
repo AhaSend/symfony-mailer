@@ -61,6 +61,9 @@ Symfony version. See the changes with `git diff 8.2...main`:
 
  - Installs on Symfony 7.4, 8.0 and 8.1. `TrackingHeader`, new in Symfony 8.2, is
    included for those versions, so you can use it there too.
+ - API v2: inline images send their `content_id` in angle brackets, as the
+   [API reference](https://ahasend.com/docs/api-reference) requires. Without them
+   AhaSend delivers the image as a regular attachment.
 
 Upgrading to Symfony 8.2
 ------------------------

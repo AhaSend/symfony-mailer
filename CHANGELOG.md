@@ -6,6 +6,7 @@ ahasend/symfony-mailer 1.0
 
  * Fork the 8.2 bridge so it installs on Symfony 7.4, 8.0 and 8.1, replacing `symfony/aha-send-mailer`
  * Include `TrackingHeader`, new in Symfony 8.2, for those versions
+ * API v2: send inline Content-IDs in angle brackets, as the API requires
 
 8.2
 ---
