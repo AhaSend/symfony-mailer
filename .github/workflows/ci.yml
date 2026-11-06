@@ -59,4 +59,5 @@ jobs:
           composer config extra.symfony.require "7.4.*"
           composer require --dev --no-update --no-interaction symfony/flex
       - run: composer update --no-interaction --no-progress --prefer-lowest
-      - run: vendor/bin/phpunit
+      # The oldest doctrine/lexer and egulias/email-validator raise deprecations about each other.
+      - run: vendor/bin/phpunit --do-not-fail-on-deprecation
