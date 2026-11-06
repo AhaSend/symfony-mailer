@@ -1,0 +1,125 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Sends a set of sandbox messages through the real AhaSend API v2 with the
+ * bridge's transport. Sandbox mode: nothing is delivered. Use it to confirm
+ * the API accepts what the transport sends, Cc/Bcc and inline images included.
+ *
+ *   AHASEND_API_KEY=aha-sk-... AHASEND_ACCOUNT_ID=... AHASEND_FROM_EMAIL=you@verified-domain.example bin/live-check
+ *
+ * Optional: AHASEND_TO_EMAIL (default to@example.com), AHASEND_SANDBOX=false
+ * to really deliver (use with care), AHASEND_HOST to target another host.
+ */
+
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\Mailer\Bridge\AhaSend\Event\AhaSendDeliveryEvent;
+use Symfony\Component\Mailer\Bridge\AhaSend\Transport\AhaSendTransportFactory;
+use Symfony\Component\Mailer\Header\TagHeader;
+use Symfony\Component\Mailer\Transport\Dsn;
+use Symfony\Component\Mailer\Transport\TransportInterface;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Email;
+
+require dirname(__DIR__).'/vendor/autoload.php';
+
+$env = static function (string $name, ?string $default = null): string {
+    $value = getenv($name);
+    if (false === $value || '' === $value) {
+        if (null === $default) {
+            fwrite(\STDERR, "Set {$name}.\n");
+            exit(2);
+        }
+
+        return $default;
+    }
+
+    return $value;
+};
+
+$apiKey = $env('AHASEND_API_KEY');
+$accountId = $env('AHASEND_ACCOUNT_ID');
+$from = $env('AHASEND_FROM_EMAIL');
+$to = $env('AHASEND_TO_EMAIL', 'to@example.com');
+$sandbox = 'false' !== strtolower($env('AHASEND_SANDBOX', 'true'));
+$host = $env('AHASEND_HOST', 'default');
+
+$deliveryErrors = [];
+$dispatcher = new class($deliveryErrors) implements Psr\EventDispatcher\EventDispatcherInterface {
+    public function __construct(private array &$errors)
+    {
+    }
+
+    public function dispatch(object $event): object
+    {
+        if ($event instanceof AhaSendDeliveryEvent) {
+            $this->errors[] = $event->getMessage();
+        }
+
+        return $event;
+    }
+};
+
+$transport = (new AhaSendTransportFactory($dispatcher, HttpClient::create()))
+    ->create(new Dsn('ahasend+api', $host, $apiKey, $accountId));
+
+$email = static function (string $subject) use ($from, $to, $sandbox): Email {
+    $email = (new Email())
+        ->from(new Address($from, 'AhaSend bridge live check'))
+        ->to($to)
+        ->subject('AhaSend bridge live check: '.$subject)
+        ->text('Text body')
+        ->html('<p>HTML body</p>');
+    if ($sandbox) {
+        $email->getHeaders()->addTextHeader('AhaSend-Sandbox', 'true');
+    }
+
+    return $email;
+};
+
+$checks = [
+    'text + html' => static fn (): Email => $email('text + html'),
+    'tags, tracking and retention (SMTP header names)' => static function () use ($email): Email {
+        $message = $email('options');
+        $message->getHeaders()->add(new TagHeader('symfony-live-check'));
+        $message->getHeaders()->addTextHeader('AhaSend-Track-Opens', 'true');
+        $message->getHeaders()->addTextHeader('AhaSend-Metadata-Retention', '1');
+
+        return $message;
+    },
+    'attachment and inline image' => static fn (): Email => $email('attachments')
+        ->html('<p>Inline image: <img src="cid:pixel"></p>')
+        ->embed(base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=='), 'pixel', 'image/png')
+        ->attach('Hello from the AhaSend bridge', 'hello.txt', 'text/plain'),
+    'cc -> conversation endpoint' => static fn (): Email => $email('cc')->cc('cc@example.com'),
+    'bcc only -> individual messages' => static fn (): Email => $email('bcc only')->to()->bcc($to, 'bcc2@example.com'),
+];
+
+$results = [];
+$run = static function (string $label, callable $build, TransportInterface $transport, bool $expectFailure = false) use (&$results, &$deliveryErrors): void {
+    echo "\n--- {$label} ---\n";
+    $deliveryErrors = [];
+    try {
+        $sent = $transport->send($build());
+        echo 'OK   Message-ID '.$sent->getMessageId()."\n";
+        foreach ($deliveryErrors as $error) {
+            echo "     rejected: {$error}\n";
+        }
+        $results[] = !$expectFailure;
+    } catch (Throwable $e) {
+        echo 'ERR  '.$e::class.': '.$e->getMessage()."\n";
+        $results[] = $expectFailure;
+    }
+};
+
+foreach ($checks as $label => $build) {
+    $run($label, $build, $transport);
+}
+
+// Expected to fail: proves the error path against the real API.
+$run('unverified sender (expect an API error)', static fn (): Email => $email('should fail')->from('nobody@definitely-not-verified-example.invalid'), $transport, true);
+
+printf("\n%d/%d checks behaved as expected%s\n", count(array_filter($results)), count($results), $sandbox ? ' (sandbox mode)' : '');
+exit(in_array(false, $results, true) ? 1 : 0);

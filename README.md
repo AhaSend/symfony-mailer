@@ -89,6 +89,13 @@ composer install
 vendor/bin/phpunit
 ```
 
+`bin/live-check` sends a set of sandbox messages through the real API (nothing is
+delivered):
+
+```sh
+AHASEND_API_KEY=aha-sk-... AHASEND_ACCOUNT_ID=... AHASEND_FROM_EMAIL=you@your-verified-domain.example bin/live-check
+```
+
 To run the tests against another Symfony version, pin it with Flex:
 
 ```sh
