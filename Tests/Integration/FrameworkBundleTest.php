@@ -119,7 +119,7 @@ final class FrameworkBundleTest extends TestCase
         $this->assertCount(1, $events);
         $this->assertInstanceOf(MailerDeliveryEvent::class, $events[0]);
         $this->assertSame(MailerDeliveryEvent::DELIVERED, $events[0]->getName());
-        $this->assertSame('<message-id@example.com>', $events[0]->getId(), 'the same Message-ID the v2 send API returns');
+        $this->assertSame('message-id@example.com', $events[0]->getId(), 'the ID of the SentMessage: its Message-ID without angle brackets');
     }
 
     public function testAWebhookWithAWrongSignatureIsRejected(): void

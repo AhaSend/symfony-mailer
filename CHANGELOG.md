@@ -10,6 +10,8 @@ ahasend/symfony-mailer 1.0
  * API v2: do not send Bcc addresses as a header
  * API v2: move AhaSend's SMTP special headers to the API's fields
  * API v1: call `api.ahasend.com`, like v2; `send.ahasend.com` is the SMTP host
+ * API v2: read the Message-ID from the send response's `message_id_header`, falling back to `id`
+ * Use Message-IDs without angle brackets in sent messages and remote events, so webhooks match messages sent over SMTP too
 
 8.2
 ---

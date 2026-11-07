@@ -47,11 +47,11 @@ rejected. Use a v2 API key and add your account ID to the DSN instead.
 
 > [!NOTE]
 > As in Symfony 8.2, the ID of the [remote events][webhook] received from AhaSend
-> is the `Message-ID` of the message, which the v2 API returns when sending it, so
-> those events can be matched with the messages you sent. This applies to all
-> AhaSend webhooks, whatever the transport used to send the messages. It used to be
-> the internal ID of the event, which is still available in the payload under
-> `data.id`, so **update any code that stored or compared the old ID**.
+> is the `Message-ID` of the message, so those events can be matched with the
+> messages you sent: it is the ID `SentMessage::getMessageId()` returns, without
+> angle brackets, whether the message was sent through the API or over SMTP. It
+> used to be the internal ID of the event, which is still available in the payload
+> under `data.id`, so **update any code that stored or compared the old ID**.
 
 Differences from the official 8.2 bridge
 ----------------------------------------
@@ -63,6 +63,9 @@ Symfony version. See the changes with `git diff 8.2...main`:
    included for those versions, so you can use it there too.
  - The legacy API v1 is called on `api.ahasend.com`, like v2. `send.ahasend.com`
    is AhaSend's SMTP host.
+ - Message-IDs have no angle brackets, in sent messages and in remote events, so
+   webhooks match messages sent over SMTP too. API v2 reads the Message-ID from the
+   send response's `message_id_header`, and from `id` in responses that predate it.
  - API v2: inline images send their `content_id` in angle brackets, as the
    [API reference](https://ahasend.com/docs/api-reference) requires. Without them
    AhaSend delivers the image as a regular attachment.

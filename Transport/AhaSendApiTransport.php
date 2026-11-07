@@ -86,11 +86,15 @@ final class AhaSendApiTransport extends AbstractApiTransport
             throw new HttpTransportException('Unable to send an email: '.$response->getContent(false).\sprintf(' (code %d).', $statusCode), $response);
         }
 
-        // one entry per recipient, each with its own generated Message-ID
+        // One entry per recipient. "message_id_header" is the Message-ID header the
+        // message is sent with; responses from before it was added had it in "id".
+        // Symfony keeps Message-IDs without angle brackets, as it does over SMTP, so
+        // that is how webhooks report them too.
         $messageId = null;
         foreach ($result['data'] ?? [] as $message) {
-            if (null === $messageId && !empty($message['id'])) {
-                $messageId = $message['id'];
+            $header = \array_key_exists('message_id_header', $message) ? $message['message_id_header'] : ($message['id'] ?? null);
+            if (null === $messageId && !empty($header)) {
+                $messageId = self::withoutAngleBrackets($header);
             }
             if (null !== $this->dispatcher && !empty($message['error'])) {
                 $this->dispatcher->dispatch(new AhaSendDeliveryEvent($message['error']));
@@ -363,6 +367,11 @@ final class AhaSendApiTransport extends AbstractApiTransport
         }
 
         return $formattedAddress;
+    }
+
+    private static function withoutAngleBrackets(string $messageId): string
+    {
+        return str_starts_with($messageId, '<') && str_ends_with($messageId, '>') ? substr($messageId, 1, -1) : $messageId;
     }
 
     private function getEndpoint(): string
