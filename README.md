@@ -69,7 +69,8 @@ Symfony version. See the changes with `git diff 8.2...main`:
  - API v2: inline images send their `content_id` in angle brackets, as the
    [API reference](https://ahasend.com/docs/api-reference) requires. Without them
    AhaSend delivers the image as a regular attachment.
- - API v2: Bcc addresses are not sent as a `Bcc` header. They are still recipients.
+ - Bcc addresses are not sent as a `Bcc` header, on API v2 and v1. They are still
+   recipients.
  - API v2: AhaSend's [SMTP special headers](https://ahasend.com/docs/smtp/special-headers)
    (`AhaSend-Tags`, `AhaSend-Track-Opens`, `AhaSend-Track-Clicks`, `AhaSend-Sandbox`,
    `AhaSend-Sandbox-Result`, `AhaSend-Metadata-Retention`, `AhaSend-Data-Retention`)
