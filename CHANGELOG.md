@@ -9,6 +9,7 @@ ahasend/symfony-mailer 1.0
  * API v2: send inline Content-IDs in angle brackets, as the API requires
  * API v2: do not send Bcc addresses as a header
  * API v2: move AhaSend's SMTP special headers to the API's fields
+ * API v1: call `api.ahasend.com`, like v2; `send.ahasend.com` is the SMTP host
 
 8.2
 ---

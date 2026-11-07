@@ -36,7 +36,6 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 final class AhaSendApiTransport extends AbstractApiTransport
 {
     private const HOST = 'api.ahasend.com';
-    private const LEGACY_HOST = 'send.ahasend.com';
 
     private bool $legacy;
 
@@ -368,6 +367,6 @@ final class AhaSendApiTransport extends AbstractApiTransport
 
     private function getEndpoint(): string
     {
-        return ($this->host ?: ($this->legacy ? self::LEGACY_HOST : self::HOST)).($this->port ? ':'.$this->port : '');
+        return ($this->host ?: self::HOST).($this->port ? ':'.$this->port : '');
     }
 }

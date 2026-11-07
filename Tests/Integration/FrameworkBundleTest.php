@@ -84,7 +84,7 @@ final class FrameworkBundleTest extends TestCase
     public static function dsnProvider(): iterable
     {
         yield 'API v2' => ['ahasend+api://aha-sk-key:ACCOUNT_ID@default', AhaSendApiTransport::class, 'ahasend+api://api.ahasend.com'];
-        yield 'API v1' => ['ahasend+api://LEGACY_KEY@default', AhaSendApiTransport::class, 'ahasend+api://send.ahasend.com'];
+        yield 'API v1' => ['ahasend+api://LEGACY_KEY@default', AhaSendApiTransport::class, 'ahasend+api://api.ahasend.com'];
         yield 'SMTP' => ['ahasend+smtp://user:pass@default', AhaSendSmtpTransport::class, 'smtp://send.ahasend.com:587'];
         yield 'SMTP short scheme' => ['ahasend://user:pass@default', AhaSendSmtpTransport::class, 'smtp://send.ahasend.com:587'];
     }
