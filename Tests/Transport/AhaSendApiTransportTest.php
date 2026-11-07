@@ -73,7 +73,7 @@ class AhaSendApiTransportTest extends TestCase
     #[IgnoreDeprecations]
     public function testSendV1()
     {
-        $this->expectUserDeprecationMessage('Since symfony/aha-send-mailer 8.2: Sending through the legacy AhaSend v1 API is deprecated, use a v2 API key and add your account id to the DSN.');
+        $this->expectUserDeprecationMessage('Since ahasend/symfony-mailer 1.0: Sending through the legacy AhaSend v1 API is deprecated, use a v2 API key and add your account id to the DSN.');
 
         $email = new Email();
         $email->from(new Address('foo@example.com', 'Ms. Foo Bar'))

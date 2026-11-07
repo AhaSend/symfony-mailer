@@ -114,7 +114,7 @@ final class AhaSendApiTransport extends AbstractApiTransport
 
     private function doSendLegacyApi(SentMessage $sentMessage, Email $email, Envelope $envelope): ResponseInterface
     {
-        trigger_deprecation('symfony/aha-send-mailer', '8.2', 'Sending through the legacy AhaSend v1 API is deprecated, use a v2 API key and add your account id to the DSN.');
+        trigger_deprecation('ahasend/symfony-mailer', '1.0','Sending through the legacy AhaSend v1 API is deprecated, use a v2 API key and add your account id to the DSN.');
 
         $response = $this->client->request('POST', 'https://'.$this->getEndpoint().'/v1/email/send', [
             'json' => $this->getLegacyPayload($email, $envelope),
