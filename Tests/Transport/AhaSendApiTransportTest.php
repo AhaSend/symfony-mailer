@@ -130,16 +130,16 @@ class AhaSendApiTransportTest extends TestCase
 
         $client = new MockHttpClient(function (string $method, string $url, array $options): ResponseInterface {
             $this->assertSame('POST', $method);
-            $this->assertSame('https://api.ahasend.com/v2/accounts/SAMPLE-ACCOUNT-ID/messages', $url);
+            $this->assertSame('https://api.ahasend.com/v2/accounts/SAMPLE-ACCOUNT-ID/messages/conversation', $url);
             $this->assertStringContainsString('Authorization: Bearer aha-sk-foo', $options['headers'][0] ?? $options['request_headers'][0]);
 
             $body = json_decode($options['body'], true);
             $this->assertSame('foo@example.com', $body['from']['email']);
             $this->assertSame('Ms. Foo Bar', $body['from']['name']);
-            $this->assertSame('bar@example.com', $body['recipients'][0]['email']);
-            $this->assertSame('Mr. Recipient', $body['recipients'][0]['name']);
-            $this->assertSame('baz@example.com', $body['recipients'][1]['email']);
-            $this->assertArrayNotHasKey('name', $body['recipients'][1]);
+            $this->assertSame('bar@example.com', $body['to'][0]['email']);
+            $this->assertSame('Mr. Recipient', $body['to'][0]['name']);
+            $this->assertSame('baz@example.com', $body['bcc'][0]['email']);
+            $this->assertArrayNotHasKey('name', $body['bcc'][0]);
             $this->assertSame('An email', $body['subject']);
             $this->assertSame('Test email body', $body['text_content']);
             $this->assertSame('<html lang="en"><body><p>Test email body</p></body></html>', $body['html_content']);

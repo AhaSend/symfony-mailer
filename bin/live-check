@@ -93,8 +93,8 @@ $checks = [
         ->html('<p>Inline image: <img src="cid:pixel"></p>')
         ->embed(base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=='), 'pixel', 'image/png')
         ->attach('Hello from the AhaSend bridge', 'hello.txt', 'text/plain'),
-    'cc -> conversation endpoint' => static fn (): Email => $email('cc')->cc('cc@example.com'),
-    'bcc only -> individual messages' => static fn (): Email => $email('bcc only')->to()->bcc($to, 'bcc2@example.com'),
+    'to + cc + bcc -> /messages/conversation, one message' => static fn (): Email => $email('to, cc and bcc')->cc('cc@example.com')->bcc('bcc@example.com'),
+    'bcc only, no to -> /messages, a copy per recipient' => static fn (): Email => $email('bcc only')->to()->bcc($to, 'bcc2@example.com'),
 ];
 
 $results = [];

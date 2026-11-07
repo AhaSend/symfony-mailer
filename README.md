@@ -71,6 +71,13 @@ Symfony version. See the changes with `git diff 8.2...main`:
    AhaSend delivers the image as a regular attachment.
  - Bcc addresses are not sent as a `Bcc` header, on API v2 and v1. They are still
    recipients.
+ - API v2 sends a message with To addresses through the conversation endpoint, as
+   one message to its To, Cc and Bcc addresses, so recipients see each other and
+   reply-all works. Each recipient gets a copy of their own through `/messages`,
+   as in 8.2, when the envelope's recipients are not exactly those addresses (mail
+   redirected with `framework.mailer.envelope.recipients`, for example, never
+   reaches the addresses in the headers), when there are more than 50 of them, or
+   when there are no To addresses.
  - API v2: AhaSend's [SMTP special headers](https://ahasend.com/docs/smtp/special-headers)
    (`AhaSend-Tags`, `AhaSend-Track-Opens`, `AhaSend-Track-Clicks`, `AhaSend-Sandbox`,
    `AhaSend-Sandbox-Result`, `AhaSend-Metadata-Retention`, `AhaSend-Data-Retention`)

@@ -36,6 +36,7 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 final class AhaSendApiTransport extends AbstractApiTransport
 {
     private const HOST = 'api.ahasend.com';
+    private const CONVERSATION_RECIPIENT_LIMIT = 50;
 
     private bool $legacy;
 
@@ -66,8 +67,11 @@ final class AhaSendApiTransport extends AbstractApiTransport
             return $this->doSendLegacyApi($sentMessage, $email, $envelope);
         }
 
-        $response = $this->client->request('POST', 'https://'.$this->getEndpoint().'/v2/accounts/'.$this->accountId.'/messages', [
-            'json' => $this->getPayload($email, $envelope),
+        $payload = $this->getPayload($email, $envelope);
+        $path = isset($payload['recipients']) ? '/messages' : '/messages/conversation';
+
+        $response = $this->client->request('POST', 'https://'.$this->getEndpoint().'/v2/accounts/'.$this->accountId.$path, [
+            'json' => $payload,
             'headers' => [
                 'Authorization' => 'Bearer '.$this->apiKey,
             ],
@@ -150,11 +154,46 @@ final class AhaSendApiTransport extends AbstractApiTransport
         return array_map(fn (Address $address) => $this->formatAddress($address), $addresses);
     }
 
+    /**
+     * The conversation endpoint sends one message to its To, Cc and Bcc addresses,
+     * so recipients see each other and reply-all works; "/messages" sends each
+     * recipient a copy of their own. The conversation endpoint is only used when
+     * the envelope sends to exactly those addresses: an application that redirects
+     * its mail, with framework.mailer.envelope.recipients for example, must never
+     * send to the addresses in the headers.
+     *
+     * @return array{to: list<array{email: string, name?: string}>, cc?: list<array{email: string, name?: string}>, bcc?: list<array{email: string, name?: string}>}|null
+     */
+    private function getConversationRecipients(Email $email, Envelope $envelope): ?array
+    {
+        $to = $email->getTo();
+        $cc = $email->getCc();
+        $bcc = $email->getBcc();
+        if (!$to || \count($to) + \count($cc) + \count($bcc) > self::CONVERSATION_RECIPIENT_LIMIT) {
+            return null;
+        }
+
+        $normalize = static function (array $addresses): array {
+            $addresses = array_map(static fn (Address $address): string => strtolower($address->getEncodedAddress()), $addresses);
+            sort($addresses);
+
+            return $addresses;
+        };
+        if ($normalize([...$to, ...$cc, ...$bcc]) !== $normalize($envelope->getRecipients())) {
+            return null;
+        }
+
+        return array_filter([
+            'to' => $this->formatAddresses($to),
+            'cc' => $this->formatAddresses($cc),
+            'bcc' => $this->formatAddresses($bcc),
+        ]);
+    }
+
     private function getPayload(Email $email, Envelope $envelope): array
     {
         // "From" and "Subject" headers are handled by the message itself
-        $payload = [
-            'recipients' => $this->formatAddresses($envelope->getRecipients()),
+        $payload = ($this->getConversationRecipients($email, $envelope) ?? ['recipients' => $this->formatAddresses($envelope->getRecipients())]) + [
             'from' => $this->formatAddress($envelope->getSender()),
             'subject' => $email->getSubject(),
         ];
@@ -170,8 +209,12 @@ final class AhaSendApiTransport extends AbstractApiTransport
         }
 
         [$headers, $tags] = $this->prepareHeaders($email->getHeaders());
-        // Bcc addresses are already in "recipients"; as a header they could be shown to everyone
+        // Bcc addresses are already recipients; as a header they could be shown to everyone
         unset($headers['Bcc']);
+        if (!isset($payload['recipients'])) {
+            // the conversation endpoint sets the Cc header from "cc", and refuses both
+            unset($headers['Cc']);
+        }
         [$headers, $tags, $options] = $this->extractOptionHeaders($headers, $tags);
         $tracking = TrackingHeader::fromHeaders($email->getHeaders());
         if ($headers) {
