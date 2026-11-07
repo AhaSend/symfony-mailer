@@ -83,7 +83,8 @@ Symfony version. See the changes with `git diff 8.2...main`:
    (`AhaSend-Tags`, `AhaSend-Track-Opens`, `AhaSend-Track-Clicks`, `AhaSend-Sandbox`,
    `AhaSend-Sandbox-Result`, `AhaSend-Metadata-Retention`, `AhaSend-Data-Retention`)
    are moved to the API's fields, so code written for SMTP keeps its meaning. A
-   malformed value throws before anything is sent.
+   malformed value throws before anything is sent, as does a retention outside the
+   API's limits: 1 to 30 days for metadata, 0 to 30 for data.
 
 Upgrading to Symfony 8.2
 ------------------------

@@ -37,6 +37,7 @@ final class AhaSendApiTransport extends AbstractApiTransport
 {
     private const HOST = 'api.ahasend.com';
     private const CONVERSATION_RECIPIENT_LIMIT = 50;
+    private const MAX_RETENTION_DAYS = 30;
 
     private bool $legacy;
 
@@ -268,8 +269,8 @@ final class AhaSendApiTransport extends AbstractApiTransport
                 'ahasend-track-clicks' => $options['tracking']['click'] = $this->parseBooleanHeader($name, $value),
                 'ahasend-sandbox' => $options['sandbox'] = $this->parseBooleanHeader($name, $value),
                 'ahasend-sandbox-result' => $options['sandbox_result'] = $value,
-                'ahasend-metadata-retention' => $options['retention']['metadata'] = $this->parseDaysHeader($name, $value),
-                'ahasend-data-retention' => $options['retention']['data'] = $this->parseDaysHeader($name, $value),
+                'ahasend-metadata-retention' => $options['retention']['metadata'] = $this->parseDaysHeader($name, $value, 1),
+                'ahasend-data-retention' => $options['retention']['data'] = $this->parseDaysHeader($name, $value, 0),
                 default => $name = null,
             };
 
@@ -286,9 +287,13 @@ final class AhaSendApiTransport extends AbstractApiTransport
         return filter_var($value, \FILTER_VALIDATE_BOOL, \FILTER_NULL_ON_FAILURE) ?? throw new InvalidArgumentException(\sprintf('The "%s" header must be "true" or "false", got "%s".', $name, $value));
     }
 
-    private function parseDaysHeader(string $name, string $value): int
+    private function parseDaysHeader(string $name, string $value, int $minDays): int
     {
-        return ctype_digit($value) ? (int) $value : throw new InvalidArgumentException(\sprintf('The "%s" header must be a whole number of days, got "%s".', $name, $value));
+        if (!ctype_digit($value) || (int) $value < $minDays || (int) $value > self::MAX_RETENTION_DAYS) {
+            throw new InvalidArgumentException(\sprintf('The "%s" header must be a whole number of days from %d to %d, got "%s".', $name, $minDays, self::MAX_RETENTION_DAYS, $value));
+        }
+
+        return (int) $value;
     }
 
     private function getLegacyPayload(Email $email, Envelope $envelope): array

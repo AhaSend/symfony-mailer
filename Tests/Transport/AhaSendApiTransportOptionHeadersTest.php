@@ -91,7 +91,17 @@ final class AhaSendApiTransportOptionHeadersTest extends TestCase
     {
         yield 'misspelt sandbox' => ['AhaSend-Sandbox', 'tru', 'The "AhaSend-Sandbox" header must be "true" or "false", got "tru".'];
         yield 'tracking value' => ['AhaSend-Track-Opens', 'enabled', 'The "AhaSend-Track-Opens" header must be "true" or "false", got "enabled".'];
-        yield 'retention value' => ['AhaSend-Data-Retention', 'abc', 'The "AhaSend-Data-Retention" header must be a whole number of days, got "abc".'];
+        yield 'retention value' => ['AhaSend-Data-Retention', 'abc', 'The "AhaSend-Data-Retention" header must be a whole number of days from 0 to 30, got "abc".'];
+        yield 'metadata retention below 1 day' => ['AhaSend-Metadata-Retention', '0', 'The "AhaSend-Metadata-Retention" header must be a whole number of days from 1 to 30, got "0".'];
+        yield 'metadata retention above 30 days' => ['AhaSend-Metadata-Retention', '31', 'The "AhaSend-Metadata-Retention" header must be a whole number of days from 1 to 30, got "31".'];
+        yield 'data retention above 30 days' => ['AhaSend-Data-Retention', '31', 'The "AhaSend-Data-Retention" header must be a whole number of days from 0 to 30, got "31".'];
+        yield 'negative retention' => ['AhaSend-Data-Retention', '-1', 'The "AhaSend-Data-Retention" header must be a whole number of days from 0 to 30, got "-1".'];
+    }
+
+    public function testTheRetentionLimitsAreAccepted(): void
+    {
+        $this->assertSame(['metadata' => 1, 'data' => 0], self::payload(['AhaSend-Metadata-Retention' => '1', 'AhaSend-Data-Retention' => '0'])['retention']);
+        $this->assertSame(['metadata' => 30, 'data' => 30], self::payload(['AhaSend-Metadata-Retention' => '30', 'AhaSend-Data-Retention' => '30'])['retention']);
     }
 
     #[DataProvider('malformedHeaders')]
