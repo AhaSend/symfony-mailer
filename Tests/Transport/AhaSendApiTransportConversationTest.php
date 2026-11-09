@@ -22,7 +22,6 @@ use Symfony\Component\Mime\Email;
 
 final class AhaSendApiTransportConversationTest extends TestCase
 {
-    /** @var list<array{url: string, body: array<string, mixed>}> */
     private array $requests = [];
 
     public function testToCcAndBccGoThroughTheConversationEndpoint(): void
@@ -97,9 +96,6 @@ final class AhaSendApiTransportConversationTest extends TestCase
         $this->assertArrayNotHasKey('headers', $request['body'], 'no Bcc header');
     }
 
-    /**
-     * @return iterable<string, array{int, string}>
-     */
     public static function provideRecipientCounts(): iterable
     {
         yield '50 recipients' => [50, '/messages/conversation'];
@@ -131,9 +127,6 @@ final class AhaSendApiTransportConversationTest extends TestCase
         (new AhaSendApiTransport('aha-sk-KEY', $client, accountId: 'ACCOUNT_ID'))->send($email, $envelope);
     }
 
-    /**
-     * @return array{url: string, body: array<string, mixed>}
-     */
     private function lastRequest(): array
     {
         $this->assertCount(1, $this->requests);

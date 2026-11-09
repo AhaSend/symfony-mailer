@@ -78,9 +78,6 @@ final class FrameworkBundleTest extends TestCase
         }
     }
 
-    /**
-     * @return iterable<string, array{string, class-string, string}>
-     */
     public static function dsnProvider(): iterable
     {
         yield 'API v2' => ['ahasend+api://aha-sk-key:ACCOUNT_ID@default', AhaSendApiTransport::class, 'ahasend+api://api.ahasend.com'];
@@ -170,7 +167,6 @@ final class FrameworkBundleTest extends TestCase
 
 final class RecordingConsumer implements ConsumerInterface
 {
-    /** @var list<RemoteEvent> */
     public array $events = [];
 
     public function consume(RemoteEvent $event): void

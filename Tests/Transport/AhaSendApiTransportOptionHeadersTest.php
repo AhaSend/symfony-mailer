@@ -23,9 +23,6 @@ use Symfony\Component\Mime\Email;
 
 final class AhaSendApiTransportOptionHeadersTest extends TestCase
 {
-    /**
-     * @param array<string, string> $headers
-     */
     private static function payload(array $headers, ?Email $email = null): array
     {
         $email ??= new Email();
@@ -84,9 +81,6 @@ final class AhaSendApiTransportOptionHeadersTest extends TestCase
         $this->assertArrayNotHasKey('sandbox', $payload);
     }
 
-    /**
-     * @return iterable<string, array{string, string, string}>
-     */
     public static function malformedHeaders(): iterable
     {
         yield 'misspelt sandbox' => ['AhaSend-Sandbox', 'tru', 'The "AhaSend-Sandbox" header must be "true" or "false", got "tru".'];
