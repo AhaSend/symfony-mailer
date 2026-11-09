@@ -63,11 +63,6 @@ Symfony version. See the changes with `git diff 8.2...main`:
 
  - Installs on Symfony 7.4, 8.0 and 8.1. `TrackingHeader`, new in Symfony 8.2, is
    included for those versions, so you can use it there too.
- - The legacy API v1 is called on `api.ahasend.com`, like v2. `send.ahasend.com`
-   is AhaSend's SMTP host.
- - Message-IDs have no angle brackets, in sent messages and in remote events, so
-   webhooks match messages sent over SMTP too. API v2 reads the Message-ID from the
-   send response's `message_id_header`, and from `id` in responses that predate it.
  - API v2: inline images send their `content_id` in angle brackets, as the
    [API reference](https://ahasend.com/docs/api-reference) requires. Without them
    AhaSend delivers the image as a regular attachment.

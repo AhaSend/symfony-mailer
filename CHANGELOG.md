@@ -9,9 +9,6 @@ ahasend/symfony-mailer 1.0
  * API v2: send inline Content-IDs in angle brackets, as the API requires
  * API v2: do not send Bcc addresses as a header
  * API v2: move AhaSend's SMTP special headers to the API's fields
- * API v1: call `api.ahasend.com`, like v2; `send.ahasend.com` is the SMTP host
- * API v2: read the Message-ID from the send response's `message_id_header`, falling back to `id`
- * Use Message-IDs without angle brackets in sent messages and remote events, so webhooks match messages sent over SMTP too
  * API v1: do not send Bcc addresses as a header either
  * API v2: send through the conversation endpoint when the envelope's recipients are the message's To, Cc and Bcc addresses, 50 at most
  * API v2: check that `AhaSend-Metadata-Retention` is 1 to 30 days and `AhaSend-Data-Retention` 0 to 30 before sending
