@@ -181,9 +181,6 @@ class AhaSendApiTransportTest extends TestCase
         $this->assertSame('3f8e2b1a-7c4d-4e2a-9b1e-2f3a4b5c6d7e', $sentMessage->getMessageId());
     }
 
-    /**
-     * @return iterable<string, array{list<array<string, mixed>>, string}>
-     */
     public static function provideSendResponses(): iterable
     {
         yield 'Message-ID in message_id_header' => [[
@@ -198,16 +195,13 @@ class AhaSendApiTransportTest extends TestCase
         ], '0199f1c2-7c4d-4e2a-9b1e-2f3a4b5c6d7e@example.com'];
     }
 
-    /**
-     * @param list<array<string, mixed>> $data
-     */
     #[DataProvider('provideSendResponses')]
     public function testTheMessageIdIsTheMessageIdHeaderWithoutAngleBracketsV2(array $data, string $expectedMessageId)
     {
         $client = new MockHttpClient(new JsonMockResponse(['object' => 'list', 'data' => $data], ['http_code' => 202]));
         $email = (new Email())->from('foo@example.com')->to('bar@example.com')->subject('An email')->text('Test email body');
 
-        $sentMessage = (new AhaSendApiTransport('aha-sk-foo', $client, accountId: 'SAMPLE-ACCOUNT-ID'))->send($email);
+        $sentMessage = (new AhaSendApiTransport('aha-sk-foo', $client, null, null, 'SAMPLE-ACCOUNT-ID'))->send($email);
 
         $this->assertSame($expectedMessageId, $sentMessage->getMessageId());
     }

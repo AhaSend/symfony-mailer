@@ -46,13 +46,14 @@ created before v2: a v2 API key (prefixed with `aha-sk-`) without an account ID 
 rejected. Use a v2 API key and add your account ID to the DSN instead.
 
 > [!NOTE]
-> As in Symfony 8.2, the ID of the [remote events][webhook] received from AhaSend
-> is the `Message-ID` of the message, so those events can be matched with the
-> messages you sent: it is the ID `SentMessage::getMessageId()` returns, without
-> angle brackets, whether the message was sent through the API or over SMTP. It
-> used to be the payload's `data.id`, then AhaSend's internal ID for the event, so
-> **update any code that stored or compared the old ID**. `data.id` is now AhaSend's
-> ID for the message, the `id` the v2 API returns when sending it.
+> As in Symfony 8.2, the ID of the [remote events][webhook] received from
+> AhaSend is the `Message-ID` header of the message, without angle brackets.
+> For a message sent through the v2 API or over SMTP, it is the ID that
+> `SentMessage::getMessageId()` returns. This lets you match the events with the
+> messages you sent. Before Symfony 8.2, the official bridge used the `data.id`
+> field of the payload, so **update any code that stored or compared the old ID**.
+> This field is now AhaSend's own ID for the message, the `id` that the v2 API
+> returns when sending it.
 
 Differences from the official 8.2 bridge
 ----------------------------------------

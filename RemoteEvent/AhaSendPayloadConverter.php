@@ -25,10 +25,8 @@ final class AhaSendPayloadConverter implements PayloadConverterInterface
             throw new ParseException('The payload is malformed.');
         }
 
-        // "data.message_id_header" is the message's Message-ID header. Without its
-        // angle brackets, it is the ID of the SentMessage, whether the email was sent
-        // through the API or over SMTP. "data.id" is AhaSend's ID for the message, the
-        // "id" of the API v2 send response.
+        // Without its angle brackets, the Message-ID header is the ID of the SentMessage, whether the email was sent through the v2 API or over SMTP.
+        // "data.id" is AhaSend's own ID for the message, the "id" of the v2 send response.
         $id = $payload['data']['message_id_header'];
         if (str_starts_with($id, '<') && str_ends_with($id, '>')) {
             $id = substr($id, 1, -1);

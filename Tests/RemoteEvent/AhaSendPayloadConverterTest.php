@@ -46,10 +46,6 @@ class AhaSendPayloadConverterTest extends TestCase
         $this->assertSame('0199f1c2-7c4d-4e2a-9b1e-2f3a4b5c6d7e@example.com', $event->getId());
     }
 
-    /**
-     * Over SMTP, the SentMessage's ID is the email's own Message-ID header, which
-     * Symfony keeps without angle brackets; the webhook reports it with them.
-     */
     public function testTheIdMatchesTheMessageIdOfAnEmailSentOverSmtp()
     {
         $email = (new Email())->from('foo@example.com')->to('bar@example.com')->subject('An email')->text('Test email body');
