@@ -19,14 +19,26 @@ use Symfony\Component\HttpFoundation\RequestMatcher\MethodRequestMatcher;
 use Symfony\Component\HttpFoundation\RequestMatcherInterface;
 use Symfony\Component\Mailer\Bridge\AhaSend\RemoteEvent\AhaSendPayloadConverter;
 use Symfony\Component\Mailer\Exception\InvalidArgumentException;
-use Symfony\Component\RemoteEvent\Event\Mailer\AbstractMailerEvent;
 use Symfony\Component\RemoteEvent\Exception\ParseException;
+use Symfony\Component\RemoteEvent\RemoteEvent;
 use Symfony\Component\Webhook\Client\AbstractRequestParser;
 use Symfony\Component\Webhook\Exception\RejectWebhookException;
 
 final class AhaSendRequestParser extends AbstractRequestParser
 {
     private const TIMESTAMP_TOLERANCE = 300;
+    private const MAILER_EVENTS = [
+        'message.reception',
+        'message.delivered',
+        'message.transient_error',
+        'message.failed',
+        'message.bounced',
+        'message.suppressed',
+        'message.opened',
+        'message.clicked',
+        'message.complained',
+        'message.unsubscribed',
+    ];
 
     public function __construct(
         private readonly AhaSendPayloadConverter $converter,
@@ -42,7 +54,7 @@ final class AhaSendRequestParser extends AbstractRequestParser
         ]);
     }
 
-    protected function doParse(Request $request, #[\SensitiveParameter] string $secret): ?AbstractMailerEvent
+    protected function doParse(Request $request, #[\SensitiveParameter] string $secret): ?RemoteEvent
     {
         if (!$secret) {
             throw new InvalidArgumentException('A non-empty secret is required.');
@@ -67,6 +79,12 @@ final class AhaSendRequestParser extends AbstractRequestParser
         $payload = $request->toArray();
         if (!isset($payload['type']) || !isset($payload['timestamp']) || !(isset($payload['data']))) {
             throw new RejectWebhookException(406, 'Payload is malformed.');
+        }
+
+        // AhaSend disables a webhook after 100 failed deliveries in a row, and asks receivers to accept
+        // the events they don't handle, so the other events are passed on as plain remote events.
+        if (\is_string($payload['type']) && !\in_array($payload['type'], self::MAILER_EVENTS, true)) {
+            return new RemoteEvent($payload['type'], $eventID, $payload);
         }
 
         try {

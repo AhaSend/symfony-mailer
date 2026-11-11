@@ -13,6 +13,8 @@ ahasend/symfony-mailer 1.0
  * API v2: send through the conversation endpoint when the envelope's recipients are the message's To, Cc and Bcc addresses, 50 at most
  * API v2: check that `AhaSend-Metadata-Retention` is 1 to 30 days and `AhaSend-Data-Retention` 0 to 30 before sending
  * Name this package in the deprecation of the legacy v1 API: "Since ahasend/symfony-mailer 1.0"
+ * Webhooks: convert `message.complained` and `message.unsubscribed` to `spam` and `unsubscribe` engagement events
+ * Webhooks: pass the other verified events on as plain remote events instead of refusing them with a 406
 
 8.2
 ---

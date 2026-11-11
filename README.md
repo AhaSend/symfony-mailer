@@ -81,6 +81,13 @@ Symfony version. See the changes with `git diff 8.2...main`:
    are moved to the API's fields, so code written for SMTP keeps its meaning. A
    malformed value throws before anything is sent, as does a retention outside the
    API's limits: 1 to 30 days for metadata, 0 to 30 for data.
+ - Webhooks: `message.complained` and `message.unsubscribed` become
+   `MailerEngagementEvent`s, `spam` and `unsubscribe`. Other verified events, such
+   as `suppression.created`, reach your consumers as plain `RemoteEvent`s named
+   after their type, with the `webhook-id` header as their ID, instead of being
+   refused with a 406: AhaSend disables a webhook after 100 failed deliveries in a
+   row. To receive mailer events only, enable just the 10 `message.*` events on the
+   webhook; otherwise, check the class of the events your consumer gets.
 
 Upgrading to Symfony 8.2
 ------------------------

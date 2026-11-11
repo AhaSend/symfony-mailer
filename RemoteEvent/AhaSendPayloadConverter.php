@@ -32,10 +32,12 @@ final class AhaSendPayloadConverter implements PayloadConverterInterface
             $id = substr($id, 1, -1);
         }
 
-        if (\in_array($payload['type'], ['message.clicked', 'message.opened'], true)) {
+        if (\in_array($payload['type'], ['message.clicked', 'message.opened', 'message.complained', 'message.unsubscribed'], true)) {
             $name = match ($payload['type']) {
                 'message.clicked' => MailerEngagementEvent::CLICK,
                 'message.opened' => MailerEngagementEvent::OPEN,
+                'message.complained' => MailerEngagementEvent::SPAM,
+                'message.unsubscribed' => MailerEngagementEvent::UNSUBSCRIBE,
                 default => throw new ParseException(\sprintf('Unsupported event "%s".', $payload['type'])),
             };
             $event = new MailerEngagementEvent($name, $id, $payload);

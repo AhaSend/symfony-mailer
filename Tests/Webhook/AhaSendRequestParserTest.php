@@ -19,6 +19,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Mailer\Bridge\AhaSend\RemoteEvent\AhaSendPayloadConverter;
 use Symfony\Component\Mailer\Bridge\AhaSend\Webhook\AhaSendRequestParser;
 use Symfony\Component\Mailer\Exception\InvalidArgumentException;
+use Symfony\Component\RemoteEvent\Event\Mailer\AbstractMailerEvent;
+use Symfony\Component\RemoteEvent\RemoteEvent;
 use Symfony\Component\Webhook\Client\RequestParserInterface;
 use Symfony\Component\Webhook\Exception\RejectWebhookException;
 use Symfony\Component\Webhook\Test\AbstractRequestParserTestCase;
@@ -82,6 +84,71 @@ class AhaSendRequestParserTest extends AbstractRequestParserTestCase
         $this->expectExceptionMessage('A non-empty secret is required.');
 
         $this->createRequestParser()->parse($request, '');
+    }
+
+    public function testOtherEventsArePassedOnAsPlainRemoteEvents()
+    {
+        $payload = [
+            'type' => 'suppression.created',
+            'timestamp' => '2024-10-28T18:30:01.797985335Z',
+            'data' => ['account_id' => '4cdd7bdd-294e-4762-892f-83d40abf5a87', 'email' => 'someone@example.com'],
+        ];
+
+        $event = $this->createRequestParser()->parse($this->createSignedRequest($payload), self::SECRET);
+
+        $this->assertEquals(new RemoteEvent('suppression.created', 'msg_2KWPBgLlAfxdpx2AI54pPJ85f4W', $payload), $event);
+        $this->assertNotInstanceOf(AbstractMailerEvent::class, $event);
+    }
+
+    public static function provideMessageEvents(): iterable
+    {
+        foreach (['reception', 'delivered', 'transient_error', 'failed', 'bounced', 'suppressed', 'opened', 'clicked', 'complained', 'unsubscribed'] as $type) {
+            yield $type => ['message.'.$type];
+        }
+    }
+
+    #[DataProvider('provideMessageEvents')]
+    public function testEveryMessageEventIsAMailerEvent(string $type)
+    {
+        $payload = [
+            'type' => $type,
+            'timestamp' => '2024-10-28T18:30:01.797985335Z',
+            'data' => ['recipient' => 'someone@example.com', 'message_id_header' => '<message-id@example.com>'],
+        ];
+
+        $event = $this->createRequestParser()->parse($this->createSignedRequest($payload), self::SECRET);
+
+        $this->assertInstanceOf(AbstractMailerEvent::class, $event);
+        $this->assertSame('message-id@example.com', $event->getId());
+    }
+
+    public function testAMalformedMessageEventIsStillRejected()
+    {
+        $payload = [
+            'type' => 'message.delivered',
+            'timestamp' => '2024-10-28T18:30:01.797985335Z',
+            'data' => ['message_id_header' => '<message-id@example.com>'],
+        ];
+
+        $this->expectException(RejectWebhookException::class);
+        $this->expectExceptionMessage('The payload is malformed.');
+
+        $this->createRequestParser()->parse($this->createSignedRequest($payload), self::SECRET);
+    }
+
+    private function createSignedRequest(array $payload): Request
+    {
+        $body = json_encode($payload, \JSON_UNESCAPED_SLASHES);
+        $id = 'msg_2KWPBgLlAfxdpx2AI54pPJ85f4W';
+        $timestamp = '1730140201';
+        ClockMock::withClockMock((int) $timestamp);
+
+        return Request::create('/', 'POST', [], [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_webhook-id' => $id,
+            'HTTP_webhook-timestamp' => $timestamp,
+            'HTTP_webhook-signature' => 'v1,'.base64_encode(hash_hmac('sha256', $id.'.'.$timestamp.'.'.$body, self::SECRET, true)),
+        ], $body);
     }
 
     protected function createRequestParser(): RequestParserInterface

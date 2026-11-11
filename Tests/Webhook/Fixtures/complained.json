@@ -1,0 +1,18 @@
+{
+  "type": "message.complained",
+  "timestamp": "2024-10-28T18:35:01.797985335Z",
+  "data": {
+    "account_id": "4cdd7bdd-294e-4762-892f-83d40abf5a87",
+    "event": "on_complained",
+    "from": "info@example.com",
+    "recipient": "someone@example.com",
+    "subject": "Sample email for testing webhooks",
+    "message_id_header": "message-id-header",
+    "id": "ahasend-message-id",
+    "is_bot": false,
+    "complaint": {
+      "feedback_type": "abuse",
+      "reporter": "yahoo"
+    }
+  }
+}
