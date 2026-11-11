@@ -74,7 +74,9 @@ Symfony version. See the changes with `git diff 8.2...main`:
    as in 8.2, when the envelope's recipients are not exactly those addresses (mail
    redirected with `framework.mailer.envelope.recipients`, for example, never
    reaches the addresses in the headers), when there are more than 50 of them, or
-   when there are no To addresses.
+   when there are no To addresses. Each copy then has its own Message-ID, and
+   `SentMessage::getMessageId()` is the one of the first recipient AhaSend
+   accepted, so only that recipient's remote events match the sent message.
  - API v2: AhaSend's [SMTP special headers](https://ahasend.com/docs/smtp/special-headers)
    (`AhaSend-Tags`, `AhaSend-Track-Opens`, `AhaSend-Track-Clicks`, `AhaSend-Sandbox`,
    `AhaSend-Sandbox-Result`, `AhaSend-Metadata-Retention`, `AhaSend-Data-Retention`)
