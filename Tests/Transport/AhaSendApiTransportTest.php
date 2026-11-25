@@ -351,7 +351,9 @@ class AhaSendApiTransportTest extends TestCase
         $method = new \ReflectionMethod(AhaSendApiTransport::class, 'getPayload');
         $payload = $method->invoke($transport, $email, Envelope::create($email));
 
-        $this->assertSame(['bar@example.com', 'baz@example.com'], array_column($payload['recipients'], 'email'));
+        // To with Bcc goes through the conversation endpoint, which takes the Bcc addresses in "bcc"
+        $this->assertSame(['bar@example.com'], array_column($payload['to'], 'email'));
+        $this->assertSame(['baz@example.com'], array_column($payload['bcc'], 'email'));
         $this->assertArrayNotHasKey('headers', $payload);
     }
 
