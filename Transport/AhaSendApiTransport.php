@@ -208,8 +208,6 @@ final class AhaSendApiTransport extends AbstractApiTransport
         }
 
         [$headers, $tags] = $this->prepareHeaders($email->getHeaders());
-        // Bcc addresses are already recipients; as a header they could be shown to everyone
-        unset($headers['Bcc']);
         if (!isset($payload['recipients'])) {
             // the conversation endpoint sets the Cc header from "cc", and refuses both
             unset($headers['Cc']);
@@ -316,8 +314,6 @@ final class AhaSendApiTransport extends AbstractApiTransport
         }
 
         [$headers, $tags] = $this->prepareHeaders($email->getHeaders());
-        // Bcc addresses are already in "recipients"; the v1 API keeps the header, so every recipient would see them
-        unset($headers['Bcc']);
         $tracking = TrackingHeader::fromHeaders($email->getHeaders());
         if ($tags) {
             $tagsStr = implode(',', $tags);
@@ -348,11 +344,11 @@ final class AhaSendApiTransport extends AbstractApiTransport
     private function prepareHeaders(Headers $headers): array
     {
         $headersPrepared = [];
-        // AhaSend API does not accept these headers.
-        $headersToBypass = ['To', 'From', 'Subject', 'Reply-To'];
+        // AhaSend API does not accept these headers, and a Bcc header would show the Bcc addresses to every recipient.
+        $headersToBypass = ['to', 'from', 'subject', 'reply-to', 'bcc'];
         $tags = [];
-        foreach ($headers->all() as $header) {
-            if (\in_array($header->getName(), $headersToBypass, true)) {
+        foreach ($headers->all() as $name => $header) {
+            if (\in_array($name, $headersToBypass, true)) {
                 continue;
             }
 
